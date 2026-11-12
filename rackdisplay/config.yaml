@@ -1,5 +1,5 @@
 name: Rack Display
-version: "1.0.0"
+version: "1.0.1"
 slug: rackdisplay
 description: SSD1306 OLED info screen with a hardware button (reboot/shutdown) for a Raspberry Pi rack
 url: https://github.com/jorissynaeve/homeassistant_rackdisplay

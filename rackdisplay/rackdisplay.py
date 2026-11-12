@@ -33,6 +33,7 @@ def load_options():
     with open(OPTIONS_FILE, encoding="utf-8") as fh:
         opts = json.load(fh)
     opts["i2c_address"] = int(str(opts["i2c_address"]), 0)
+    opts["display_height"] = int(opts["display_height"])  # schema list() yields a string
     return opts
 
 
@@ -182,8 +183,22 @@ def main():
     signal.signal(signal.SIGINT, lambda *_: stop_event.set())
 
     width, height = opts["display_width"], opts["display_height"]
-    disp = SSD1306(opts["i2c_bus"], opts["i2c_address"], width, height, opts["rotate_180"])
     gpio = Gpio(opts["gpio_chip"], opts["button_pin"], opts["button_pull_up"], opts["led_pin"])
+    LOG.info("GPIO ready (button=%s, led=%s)", opts["button_pin"], opts["led_pin"])
+    try:
+        disp = SSD1306(opts["i2c_bus"], opts["i2c_address"], width, height, opts["rotate_180"])
+    except FileNotFoundError:
+        LOG.error(
+            "/dev/i2c-%s not found: I2C is not enabled on this Home Assistant OS. "
+            "Enable it (dtparam=i2c_arm=on, see the add-on Documentation) and reboot the host.",
+            opts["i2c_bus"],
+        )
+        gpio.close()
+        sys.exit(1)
+    except OSError as err:
+        LOG.error("No OLED answering at 0x%02X on i2c-%s: %s", opts["i2c_address"], opts["i2c_bus"], err)
+        gpio.close()
+        sys.exit(1)
 
     image = Image.new("1", (width, height))
     draw = ImageDraw.Draw(image)
