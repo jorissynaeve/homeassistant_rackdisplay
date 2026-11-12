@@ -41,7 +41,7 @@ def load_options():
 class SSD1306:
     """Minimal SSD1306 I2C driver (page/horizontal addressing, SMBus)."""
 
-    def __init__(self, bus, address, width, height, rotate_180):
+    def __init__(self, bus, address, width, height, rotate_180, contrast=255, high_brightness=True):
         from smbus import SMBus
 
         self.bus = SMBus(bus)
@@ -62,8 +62,8 @@ class SSD1306:
             0xDA, com_pins,
             0xD5, 0x80,  # clock divide
             0xD9, 0xF1,  # pre-charge
-            0xDB, 0x30,  # vcomh
-            0x81, 0xFF,  # contrast
+            0xDB, 0x40 if high_brightness else 0x30,  # vcomh (0x40 = brighter)
+            0x81, max(0, min(255, int(contrast))),  # contrast
             0xA4,  # follow RAM
             0xA6,  # normal (not inverted)
             0x8D, 0x14,  # charge pump on
@@ -186,7 +186,8 @@ def main():
     gpio = Gpio(opts["gpio_chip"], opts["button_pin"], opts["button_pull_up"], opts["led_pin"])
     LOG.info("GPIO ready (button=%s, led=%s)", opts["button_pin"], opts["led_pin"])
     try:
-        disp = SSD1306(opts["i2c_bus"], opts["i2c_address"], width, height, opts["rotate_180"])
+        disp = SSD1306(opts["i2c_bus"], opts["i2c_address"], width, height, opts["rotate_180"],
+                       opts["contrast"], opts["high_brightness"])
     except FileNotFoundError:
         LOG.error(
             "/dev/i2c-%s not found: I2C is not enabled on this Home Assistant OS. "
@@ -214,6 +215,8 @@ def main():
         draw.rectangle((0, 0, width, height), outline=0, fill=0)
         for i, text in enumerate(lines):
             draw.text((0, top + i * line_h), text, font=font, fill=255)
+            if opts["bold_text"]:  # second pass 1px right = thicker strokes
+                draw.text((1, top + i * line_h), text, font=font, fill=255)
         disp.show(image)
 
     screen("--------------------", " Infoscreen Started ", "--------------------")

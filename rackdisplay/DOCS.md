@@ -35,6 +35,9 @@ and reboot the host. Afterwards `/dev/i2c-1` shows up under Settings -> System -
 | `i2c_address` | `0x3C` | OLED I2C address |
 | `display_width` / `display_height` | 128 / 32 | Panel size (height 32 or 64) |
 | `rotate_180` | true | Flip the picture 180 degrees. Toggle if the text is upside down |
+| `contrast` | 255 | OLED contrast 0-255 (255 is the maximum) |
+| `high_brightness` | true | Higher VCOMH level, noticeably brighter panel |
+| `bold_text` | true | Draw text 2 px wide for better readability |
 | `button_pin` | 20 | BCM pin of the button (0 disables) |
 | `button_pull_up` | true | Enable the internal pull-up |
 | `led_pin` | 23 | BCM pin of the LED (0 disables) |
